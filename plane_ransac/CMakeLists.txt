@@ -8,8 +8,6 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -O3")
 include_directories("/usr/local/include/eigen3")
 
 find_package(PCL REQUIRED)
-find_package(Pangolin REQUIRED)
-include_directories(${Pangolin_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
