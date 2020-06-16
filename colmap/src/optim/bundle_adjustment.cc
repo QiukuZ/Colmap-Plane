@@ -321,6 +321,72 @@ const ceres::Solver::Summary& BundleAdjuster::Summary() const {
   return summary_;
 }
 
+
+// Added by ezxr-sx-zhangqunkang
+// Add Start 
+bool BundleAdjuster_ezxr::Solve_ezxr(Reconstruction* reconstruction) {
+  CHECK_NOTNULL(reconstruction);
+  CHECK(!problem_) << "Cannot use the same BundleAdjuster multiple times";
+
+  problem_.reset(new ceres::Problem());
+
+  ceres::LossFunction* loss_function = options_.CreateLossFunction();
+  SetUp_ezxr(reconstruction, loss_function);
+
+  if (problem_->NumResiduals() == 0) {
+    return false;
+  }
+
+  ceres::Solver::Options solver_options = options_.solver_options;
+
+  // Empirical choice.
+  const size_t kMaxNumImagesDirectDenseSolver = 50;
+  const size_t kMaxNumImagesDirectSparseSolver = 1000;
+  const size_t num_images = config_.NumImages();
+  if (num_images <= kMaxNumImagesDirectDenseSolver) {
+    solver_options.linear_solver_type = ceres::DENSE_SCHUR;
+  } else if (num_images <= kMaxNumImagesDirectSparseSolver) {
+    solver_options.linear_solver_type = ceres::SPARSE_SCHUR;
+  } else {  // Indirect sparse (preconditioned CG) solver.
+    solver_options.linear_solver_type = ceres::ITERATIVE_SCHUR;
+    solver_options.preconditioner_type = ceres::SCHUR_JACOBI;
+  }
+
+  if (problem_->NumResiduals() <
+      options_.min_num_residuals_for_multi_threading) {
+    solver_options.num_threads = 1;
+#if CERES_VERSION_MAJOR < 2
+    solver_options.num_linear_solver_threads = 1;
+#endif  // CERES_VERSION_MAJOR
+  } else {
+    solver_options.num_threads =
+        GetEffectiveNumThreads(solver_options.num_threads);
+#if CERES_VERSION_MAJOR < 2
+    solver_options.num_linear_solver_threads =
+        GetEffectiveNumThreads(solver_options.num_linear_solver_threads);
+#endif  // CERES_VERSION_MAJOR
+  }
+
+  std::string solver_error;
+  CHECK(solver_options.IsValid(&solver_error)) << solver_error;
+
+  ceres::Solve(solver_options, problem_.get(), &summary_);
+
+  if (solver_options.minimizer_progress_to_stdout) {
+    std::cout << std::endl;
+  }
+
+  if (options_.print_summary) {
+    PrintHeading2("Bundle adjustment report");
+    PrintSolverSummary(summary_);
+  }
+
+  TearDown(reconstruction);
+
+  return true;
+}
+// Add End
+
 void BundleAdjuster::SetUp(Reconstruction* reconstruction,
                            ceres::LossFunction* loss_function) {
   // Warning: AddPointsToProblem assumes that AddImageToProblem is called first.
@@ -342,6 +408,116 @@ void BundleAdjuster::SetUp(Reconstruction* reconstruction,
 void BundleAdjuster::TearDown(Reconstruction*) {
   // Nothing to do
 }
+
+
+// Added by ezxr-sx-zhangqunkang
+// Add Start
+void BundleAdjuster_ezxr::SetUp_ezxr(Reconstruction* reconstruction,
+                           ceres::LossFunction* loss_function) {
+  // Warning: AddPointsToProblem assumes that AddImageToProblem is called first.
+  // Do not change order of instructions!
+  std::cout << "BA_ezxr SetUp!!!" << std::endl;
+  std::cout << "Plane num : " << planes_coeffs_.size() << std::endl;
+
+  for (const image_t image_id : config_.Images()) {
+    AddImageToProblem(image_id, reconstruction, loss_function);
+  }
+  for (const auto point3D_id : config_.VariablePoints()) {
+    AddPointToProblem(point3D_id, reconstruction, loss_function);
+  }
+  for (const auto point3D_id : config_.ConstantPoints()) {
+    AddPointToProblem(point3D_id, reconstruction, loss_function);
+  }
+
+  if (planes_coeffs_.size())
+  {
+    AddPlaneToProblem(reconstruction, loss_function);
+  }
+
+  ParameterizeCameras(reconstruction);
+  ParameterizePoints(reconstruction);
+}
+
+bool BundleAdjuster_ezxr::GetPlaneInfoFromTxt(std::string path) {
+  std::ifstream infile;
+  infile.open(path);
+  
+  if(!infile){
+    std::cout << " PlaneInfo txt can not open!" << std::endl;
+    return false;
+  }
+
+  std::string s;
+  size_t plane_num = 0;
+  while(infile.good() && !infile.eof())
+  {
+      infile >> s;
+      if (s == "PlaneNum")
+      {
+        infile >> plane_num;
+      }
+      if (s == "Weight")
+      {
+        double w;
+        planes_weight_.clear();
+        for (size_t i = 0; i < plane_num; i++)
+        {
+          infile >> w;
+          planes_weight_.push_back(w);
+        }
+      }
+      if (s == "Plane")
+      {
+        double a,b,c,d;
+        infile >> a;
+        infile >> b;
+        infile >> c;
+        infile >> d;
+        double points_num;
+        infile >> s;
+        infile >> points_num;
+        Eigen::Vector4d coeffs(a,b,c,d);
+        planes_coeffs_.push_back(coeffs);
+
+        infile >> s;
+        std::vector<point3D_t> point3D_ids;
+        point3D_t point3D_id;
+        for (size_t i = 0; i < points_num; i++)
+        {
+          infile >> point3D_id;
+          point3D_ids.push_back(point3D_id);
+        }
+        planes_point3D_ids_.push_back(point3D_ids);
+      }
+  }
+  infile.close();
+  
+  if(plane_num != planes_coeffs_.size()){
+    std::cout << " Plane INFO Error! " << std::endl;
+    return false;
+  }
+
+  std::cout << "#############################################" << std::endl;
+  std::cout << "Plane INFO : " << std::endl;
+  std::cout << "Plane Num : " << planes_coeffs_.size() << std::endl;
+  std::cout << "Plane Weight : " ;
+  for (size_t i = 0; i < plane_num; i++)
+  {
+    std::cout << planes_weight_[i] << " " ;
+  }
+  std::cout << std::endl;
+
+  for (size_t i = 0; i < planes_coeffs_.size(); i++)
+  {
+    std::cout << "   * Plane " << i+1 << " coeffs : " << planes_coeffs_[i][0] << planes_coeffs_[i][1] << planes_coeffs_[i][2] << planes_coeffs_[i][3] << std::endl;
+    std::cout << "   * Plane " << i+1 << " point3D num : " << planes_point3D_ids_[i].size() << std::endl;
+  }
+  std::cout << "#############################################" << std::endl;
+  
+  return true;
+}
+// Add End
+
 
 void BundleAdjuster::AddImageToProblem(const image_t image_id,
                                        Reconstruction* reconstruction,
@@ -478,6 +654,32 @@ void BundleAdjuster::AddPointToProblem(const point3D_t point3D_id,
                                point3D.XYZ().data(), camera.ParamsData());
   }
 }
+
+// Added by ezxr-sx-zhangqunkang
+// Add Start
+
+void BundleAdjuster_ezxr::AddPlaneToProblem(Reconstruction* reconstruction,
+                                            ceres::LossFunction* loss_function) {
+
+  std::cout << "Add Plane to Problem!" << std::endl;
+
+  for (size_t i = 0; i < planes_coeffs_.size(); i++)
+  {
+    std::vector<point3D_t> point3D_ids = planes_point3D_ids_[i];
+
+    for (const point3D_t point3D_id : point3D_ids)
+    {
+      Point3D& point3D = reconstruction->Point3D(point3D_id);
+
+      ceres::CostFunction* cost_function = nullptr;
+      
+      cost_function = BundleAdjustmentPlaneCostFunction::Create(planes_weight_[i]*planes_coeffs_[i]);
+      problem_->AddResidualBlock(cost_function, loss_function,point3D.XYZ().data());
+    }
+    
+  }
+}
+// Add End
 
 void BundleAdjuster::ParameterizeCameras(Reconstruction* reconstruction) {
   const bool constant_camera = !options_.refine_focal_length &&

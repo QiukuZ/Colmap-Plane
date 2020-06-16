@@ -35,7 +35,7 @@
 #include "base/reconstruction.h"
 #include "util/option_manager.h"
 #include "util/threading.h"
-
+#include "vector"
 namespace colmap {
 
 // Class that controls the global bundle adjustment procedure.
@@ -50,6 +50,26 @@ class BundleAdjustmentController : public Thread {
   const OptionManager options_;
   Reconstruction* reconstruction_;
 };
+
+
+// Added by ezxr-sx-zhangqunkang
+// Add Start
+// Class that controls the global bundle adjustment procedure.
+class BundleAdjustmentController_ezxr : public Thread {
+ public:
+  BundleAdjustmentController_ezxr(const OptionManager& options,
+                             Reconstruction* reconstruction);
+  void AddPlaneConstraint(std::string plane_constraint_path);
+
+ private:
+  void Run();
+
+  const OptionManager options_;
+  Reconstruction* reconstruction_;
+  std::string plane_constraint_path_;
+  bool plane_constraint_;
+};
+// Add End
 
 }  // namespace colmap
 

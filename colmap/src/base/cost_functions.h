@@ -39,6 +39,40 @@
 
 namespace colmap {
 
+
+// Added by ezxr-sx-zhangqunkang
+// Add Start
+// Plane Constraint Cost Function
+// Residual : ax + by + cz + d  [1]
+// Params : Point3D [3]
+class BundleAdjustmentPlaneCostFunction {
+ public:
+  explicit BundleAdjustmentPlaneCostFunction(const Eigen::Vector4d& coeffs)
+      : a_(coeffs(0)), b_(coeffs(1)), c_(coeffs(2)), d_(coeffs(3)) {}
+
+  static ceres::CostFunction* Create(const Eigen::Vector4d& coeffs) {
+    return (new ceres::AutoDiffCostFunction<
+            BundleAdjustmentPlaneCostFunction, 1, 3>(
+        new BundleAdjustmentPlaneCostFunction(coeffs)));
+  }
+
+  template <typename T>
+  bool operator()(const T* const point3D, T* residuals) const {
+    
+    // Plane Constraint error.
+    residuals[0] = point3D[0]*T(a_) + point3D[1]*T(b_) + point3D[2]*T(c_) + T(d_);
+    return true;
+  }
+
+ private:
+  const double a_;
+  const double b_;
+  const double c_;
+  const double d_;
+};
+//Add End
+
+
 // Standard bundle adjustment cost function for variable
 // camera pose and calibration and point parameters.
 template <typename CameraModel>

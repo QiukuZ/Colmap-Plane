@@ -178,7 +178,9 @@ class BundleAdjuster {
   // Get the Ceres solver summary for the last call to `Solve`.
   const ceres::Solver::Summary& Summary() const;
 
- private:
+ // Changed by ezxr-sx-zhangqunkang
+ // private -> protected 
+ protected:
   void SetUp(Reconstruction* reconstruction,
              ceres::LossFunction* loss_function);
   void TearDown(Reconstruction* reconstruction);
@@ -201,6 +203,30 @@ class BundleAdjuster {
   std::unordered_set<camera_t> camera_ids_;
   std::unordered_map<point3D_t, size_t> point3D_num_observations_;
 };
+
+// Added by ezxr-sx-zhangqunkang
+// Add Start
+class BundleAdjuster_ezxr : public BundleAdjuster{
+  public:
+    BundleAdjuster_ezxr(const BundleAdjustmentOptions& options,const BundleAdjustmentConfig& config): BundleAdjuster(options, config) {}
+    bool GetPlaneInfoFromTxt(std::string path);
+    bool Solve_ezxr(Reconstruction* reconstruction);
+
+  private:
+    void SetUp_ezxr(Reconstruction* reconstruction,
+              ceres::LossFunction* loss_function);
+
+    void AddPlaneToProblem(Reconstruction* reconstruction,
+                           ceres::LossFunction* loss_function);
+    
+
+  protected:
+    std::vector<Eigen::Vector4d> planes_coeffs_;
+    std::vector<double> planes_weight_;
+    std::vector<std::vector<point3D_t> > planes_point3D_ids_;
+};
+// Add End
+
 
 // Bundle adjustment using PBA (GPU or CPU). Less flexible and accurate than
 // Ceres-Solver bundle adjustment but much faster. Only supports SimpleRadial
