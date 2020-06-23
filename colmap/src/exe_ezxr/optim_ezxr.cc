@@ -32,20 +32,22 @@ void PrintUsage();
 int main(int argc, char** argv) {
   InitializeGlog(argv);
   
-  if (argc < 7)
-  {
-    PrintUsage();
-    return 0;
-  }
+  // if (argc < 7)
+  // {
+  //   PrintUsage();
+  //   return 0;
+  // }
   
-  // string input_path = "/home/alex/Desktop/Lidar_Visual_Plane/0603_long_try/sparse_aligned";
-  // string output_path = "/home/alex/Desktop/Lidar_Visual_Plane/0603_long_try/sparse_test";
-  // string plane_constraint_path = "/home/alex/Desktop/Lidar_Visual_Plane/0603_long_try/data/planes_constraint.txt";
+  string input_path = "/home/alex/Desktop/Lidar_Visual_Plane/0603_long_try/sparse_aligned";
+  string output_path = "/home/alex/Desktop/Lidar_Visual_Plane/0603_long_try/sparse_test";
+  string plane_constraint_path = "/home/alex/Desktop/Lidar_Visual_Plane/0603_long_try/data/planes_constraint.txt";
 
-  string input_path = argv[2];
-  string output_path = argv[4];
-  string plane_constraint_path = argv[6];
+  // string input_path = argv[2];
+  // string output_path = argv[4];
+  // string plane_constraint_path = argv[6];
 
+  string pose_geos_path = "/home/alex/Desktop/Lidar_Visual_Plane/0603/geos.txt";
+  string tum_result_path = "/home/alex/Desktop/Lidar_Visual_Plane/0603/tum_result.txt";
 
   cout << "Optim test Start!" << endl;
   OptionManager options;
@@ -61,6 +63,8 @@ int main(int argc, char** argv) {
   // BA controller 来控制 BA问题构建
   BundleAdjustmentController_ezxr ba_controller(options, &reconstruction);
   ba_controller.AddPlaneConstraint(plane_constraint_path);
+  ba_controller.AddPoseConstraint(pose_geos_path,100.0);
+  ba_controller.SaveImageTraj(tum_result_path);
   ba_controller.Start();
   ba_controller.Wait();
 

@@ -211,6 +211,10 @@ class BundleAdjuster_ezxr : public BundleAdjuster{
     BundleAdjuster_ezxr(const BundleAdjustmentOptions& options,const BundleAdjustmentConfig& config): BundleAdjuster(options, config) {}
     bool GetPlaneInfoFromTxt(std::string path);
     bool Solve_ezxr(Reconstruction* reconstruction);
+    bool GetPoseInfoFromTxt(std::string path);
+    void PrintPoseInfo();
+    void SaveImageTraj(Reconstruction* reconstruction, std::string path);
+    void SetPoseWeight(const double weight);
 
   private:
     void SetUp_ezxr(Reconstruction* reconstruction,
@@ -218,7 +222,9 @@ class BundleAdjuster_ezxr : public BundleAdjuster{
 
     void AddPlaneToProblem(Reconstruction* reconstruction,
                            ceres::LossFunction* loss_function);
-    
+                           
+    void AddPoseToProblem(Reconstruction* reconstruction,
+                           ceres::LossFunction* loss_function);
 
   protected:
     std::vector<Eigen::Vector4d> planes_coeffs_;

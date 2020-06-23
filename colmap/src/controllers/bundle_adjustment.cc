@@ -151,6 +151,18 @@ void BundleAdjustmentController_ezxr::AddPlaneConstraint(std::string plane_const
   plane_constraint_path_ = plane_constraint_path;
   plane_constraint_ = true;
 }
+
+void BundleAdjustmentController_ezxr::AddPoseConstraint(std::string pose_geos_path, const double weight) { 
+  pose_geos_path_ = pose_geos_path;
+  pose_geos_constraint_ = true;
+  pose_weight_ = weight;
+}
+
+void BundleAdjustmentController_ezxr::SaveImageTraj(std::string tum_path) {
+  tum_path_ = tum_path;
+  save_image_traj_ = true;
+}
+
 // Add End
 
 }  // namespace colmap

@@ -43,7 +43,7 @@
 #include "util/misc.h"
 #include "util/threading.h"
 #include "util/timer.h"
-
+#include "fstream"
 namespace colmap {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,9 +433,52 @@ void BundleAdjuster_ezxr::SetUp_ezxr(Reconstruction* reconstruction,
   {
     AddPlaneToProblem(reconstruction, loss_function);
   }
-
+  if (image_pose_geos_.size())
+  {
+    AddPoseToProblem(reconstruction, loss_function);
+  }
   ParameterizeCameras(reconstruction);
   ParameterizePoints(reconstruction);
+}
+
+bool BundleAdjuster_ezxr::GetPoseInfoFromTxt(std::string path){
+  std::ifstream infile;
+  infile.open(path);
+
+  image_pose_geos_.clear();
+
+  if(!infile){
+    std::cout << " PoseInfo txt can not open!" << std::endl;
+    return false;
+  }
+
+  std::string s;
+  infile >> s;
+  while(infile.good() && !infile.eof())
+  {
+    ImagePose image_pose;
+    image_pose.ImageName = s;
+    infile >> image_pose.Position[0];
+    infile >> image_pose.Position[1];
+    infile >> image_pose.Position[2];
+    image_pose_geos_.push_back(image_pose);
+    infile >> s;
+    // std::cout << s << " " << x << " " << y << " " << z << std::endl;
+  }
+  infile.close();
+  return true;
+}
+
+void BundleAdjuster_ezxr::PrintPoseInfo(){
+  std::cout << "Pose Info : " << std::endl;
+  std::cout << "Pose Image Num : " << image_pose_geos_.size() << std::endl;
+  for (size_t i = 0; i < image_pose_geos_.size(); i++)
+  {
+    std::cout << "*ImageName : " << image_pose_geos_[i].ImageName << " Position : " << image_pose_geos_[i].Position[0] << " "
+                                                                                    << image_pose_geos_[i].Position[1] << " "
+                                                                                    << image_pose_geos_[i].Position[2] << std::endl; 
+  }
+   
 }
 
 bool BundleAdjuster_ezxr::GetPlaneInfoFromTxt(std::string path) {
@@ -515,6 +558,76 @@ bool BundleAdjuster_ezxr::GetPlaneInfoFromTxt(std::string path) {
   std::cout << "#############################################" << std::endl;
   
   return true;
+}
+
+void BundleAdjuster_ezxr::SetPoseWeight(const double weight){
+    pose_weight_ = weight;
+}
+
+void BundleAdjuster_ezxr::AddPoseToProblem(Reconstruction* reconstruction,
+                                            ceres::LossFunction* loss_function) {
+  std::cout << "Add Pose to Problem!" << std::endl;
+  int num = 0;
+  for (size_t i = 0; i < image_pose_geos_.size(); i++)
+  {
+    std::string image_name = image_pose_geos_[i].ImageName;
+    const std::vector<image_t>& reg_image_ids = reconstruction->RegImageIds();
+    for (const image_t image_id : reg_image_ids)
+    {
+      if (image_name == reconstruction->Image(image_id).Name().data())
+      {
+        Image& image = reconstruction->Image(image_id);
+        double* tvec_data = image.Tvec().data();
+        double* qvec_data = image.Qvec().data();
+        ceres::CostFunction* cost_function = nullptr;
+        cost_function = BundleAdjustmentPoseCostFunction::Create(image_pose_geos_[i].Position,pose_weight_);
+        problem_->AddResidualBlock(cost_function, loss_function, qvec_data, tvec_data);
+        num ++ ;
+        break;
+      }
+    }
+  }             
+  std::cout << "Pose Constriant Num : " << num << std::endl;        
+}
+
+void BundleAdjuster_ezxr::SaveImageTraj(Reconstruction* reconstruction, std::string path) {
+  std::cout << "Star Save Image Traj !" << std::endl;
+  std::ofstream of;
+  of.open(path);
+  for (size_t i = 0; i < image_pose_geos_.size(); i++)
+  {
+    std::string image_name = image_pose_geos_[i].ImageName;
+    const std::vector<image_t>& reg_image_ids = reconstruction->RegImageIds();
+    for (const image_t image_id : reg_image_ids)
+    {
+      if (image_name == reconstruction->Image(image_id).Name().data())
+      {
+        Image& image = reconstruction->Image(image_id);
+        // 注意：由于Colmap中的Qvec和Tvec都是WorldtoImage,到出时需要求逆变换为ImagetoWorld
+        Eigen::Quaterniond q;
+        q.w() = image.Qvec()[0];
+        q.x() = image.Qvec()[1];
+        q.y() = image.Qvec()[2];
+        q.z() = image.Qvec()[3];
+        q = q.normalized();
+        q.x() = -q.x();
+        q.y() = -q.y();
+        q.z() = -q.z();
+        Eigen::Matrix3d R = q.toRotationMatrix();
+        Eigen::Vector3d t = -R*image.Tvec();
+        of << image.Name().substr(5,19) << " " << t[0] << " " 
+                                               << t[1] << " " 
+                                               << t[2] << " " 
+                                               << q.w() << " " 
+                                               << q.x() << " "
+                                               << q.y() << " "
+                                               << q.z() << std::endl;
+        break;
+      }
+    }
+  }
+  of.close();
+  std::cout << "Save Image Traj Success at " << path << std::endl;
 }
 // Add End
 

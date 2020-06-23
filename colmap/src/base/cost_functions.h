@@ -36,6 +36,7 @@
 
 #include <ceres/ceres.h>
 #include <ceres/rotation.h>
+#include "glog/logging.h"
 
 namespace colmap {
 
@@ -70,6 +71,57 @@ class BundleAdjustmentPlaneCostFunction {
   const double c_;
   const double d_;
 };
+
+class BundleAdjustmentPoseCostFunction {
+ public:
+  explicit BundleAdjustmentPoseCostFunction(const Eigen::Vector3d& position, const double weight)
+      : x_(position(0)), y_(position(1)), z_(position(2)), weight_(weight) {}
+
+  static ceres::CostFunction* Create(const Eigen::Vector3d& position, const double weight) {
+    return (new ceres::AutoDiffCostFunction<
+            BundleAdjustmentPoseCostFunction,3,4,3>(
+        new BundleAdjustmentPoseCostFunction(position, weight)));
+  }
+
+  template <typename T>
+  bool operator()(const T* const Qvec, const T* const Tvec, T* residuals) const {
+    
+    // Pose Constraint error.
+    const T qw = Qvec[0];
+    const T qx = Qvec[1];
+    const T qy = Qvec[2];
+    const T qz = Qvec[3];
+
+    const T R11 = T(1) - qy*qy - qy*qy - qz*qz - qz*qz;
+    const T R12 = qx*qy + qz*qw + qx*qy + qz*qw;
+    const T R13 = qx*qz - qy*qw + qx*qz - qy*qw;
+    const T R21 = qx*qy - qz*qw + qx*qy - qz*qw;
+    const T R22 = T(1) - qx*qx - qz*qz - qx*qx - qz*qz;
+    const T R23 = qy*qz + qx*qw + qy*qz + qx*qw;
+    const T R31 = qx*qz + qy*qw + qx*qz + qy*qw;
+    const T R32 = qy*qz - qx*qw + qy*qz - qx*qw;
+    const T R33 = T(1) - qx*qx - qy*qy - qx*qx - qy*qy;
+
+    const T tx = - (R11*Tvec[0] + R12*Tvec[1] + R13*Tvec[2]);
+    const T ty = - (R21*Tvec[0] + R22*Tvec[1] + R23*Tvec[2]);
+    const T tz = - (R31*Tvec[0] + R32*Tvec[1] + R33*Tvec[2]);
+    
+    const T w = T(100); 
+    
+    residuals[0] = w*(tx-x_);
+    residuals[1] = w*(ty-y_);
+    residuals[2] = w*(tz-z_);
+
+    return true;
+  }
+
+ private:
+  const double x_;
+  const double y_;
+  const double z_;
+  const double weight_;
+};
+
 //Add End
 
 
