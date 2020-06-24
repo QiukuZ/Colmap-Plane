@@ -8,6 +8,7 @@
     "plane_weight":[50.0,100.0,50.0,50.0],
     "pose_weight":100.0,
     "plane_constraint_enable":true,
-    "pose_constraint_enable":false
+    "pose_constraint_enable":false,
+    "save_image_traj_enable":true
 }
 
