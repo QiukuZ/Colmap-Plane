@@ -543,12 +543,6 @@ bool BundleAdjuster_ezxr::GetPlaneInfoFromTxt(std::string path) {
   std::cout << "#############################################" << std::endl;
   std::cout << "Plane INFO : " << std::endl;
   std::cout << "Plane Num : " << planes_coeffs_.size() << std::endl;
-  std::cout << "Plane Weight : " ;
-  for (size_t i = 0; i < plane_num; i++)
-  {
-    std::cout << planes_weight_[i] << " " ;
-  }
-  std::cout << std::endl;
 
   for (size_t i = 0; i < planes_coeffs_.size(); i++)
   {

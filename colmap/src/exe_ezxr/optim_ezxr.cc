@@ -69,9 +69,10 @@ int main(int argc, char** argv) {
 
   // BA controller 来控制 BA问题构建
   BundleAdjustmentController_ezxr ba_controller(options, &reconstruction);
-  ba_controller.AddPlaneConstraint(config.plane_constraint_path, config.plane_weight);
-  ba_controller.AddPoseConstraint(config.pose_geos_path,config.pose_weight);
-  ba_controller.SaveImageTraj(config.tum_result_path);
+  // ba_controller.AddPlaneConstraint(config.plane_constraint_path, config.plane_weight);
+  // ba_controller.AddPoseConstraint(config.pose_geos_path, config.pose_weight);
+  // ba_controller.SaveImageTraj(config.tum_result_path);
+  ba_controller.SetConfig(config);
   ba_controller.Start();
   ba_controller.Wait();
 
@@ -185,9 +186,9 @@ JsonConfig GetConfigInfo(std::string config_json_path){
     for (size_t i = 0; i < config.plane_weight.size(); i++)
     {
         if (i < config.plane_weight.size()-1)
-            std::cout << weight << ",";
+            std::cout << config.plane_weight[i] << ",";
         else
-            std::cout << weight << "]" << std::endl;
+            std::cout << config.plane_weight[i] << "]" << std::endl;
     }
     std::cout << "===> pose_weight : " << config.pose_weight << std::endl;
     std::cout << "===> plane_constraint_enable : " << config.plane_constraint_enable << std::endl;

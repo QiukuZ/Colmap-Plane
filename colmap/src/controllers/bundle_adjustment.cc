@@ -172,6 +172,18 @@ void BundleAdjustmentController_ezxr::SaveImageTraj(std::string tum_path) {
   save_image_traj_ = true;
 }
 
+void BundleAdjustmentController_ezxr::SetConfig(JsonConfig config) {
+  plane_constraint_path_ = config.plane_constraint_path;
+  plane_constraint_ = config.plane_constraint_enable;
+  plane_weight_ = config.plane_weight;
+
+  pose_geos_path_ = config.pose_geos_path;
+  pose_geos_constraint_ = config.pose_constraint_enable;
+  pose_weight_ = config.pose_weight;
+  
+  tum_path_ = config.tum_result_path;
+  save_image_traj_ = true;
+}
 // Add End
 
 }  // namespace colmap
