@@ -1,0 +1,13 @@
+{
+    "input_model_path":"/home/alex/Desktop/Lidar_Visual_Plane/0603/sparse_aligned",
+    "output_model_path":"/home/alex/Desktop/Lidar_Visual_Plane/0603/sparse_test",
+    "plane_constraint_path":"/home/alex/Desktop/Lidar_Visual_Plane/0603/data/planes_constraint.txt",
+    "pose_geos_path":"/home/alex/Desktop/Lidar_Visual_Plane/0603/geos.txt",
+    "tum_result_path":"/home/alex/Desktop/Lidar_Visual_Plane/0603/tum_result.txt",
+    "plane_num":4,
+    "plane_weight":[50.0,100.0,50.0,50.0],
+    "pose_weight":100.0,
+    "plane_constraint_enable":true,
+    "pose_constraint_enable":false
+}
+
