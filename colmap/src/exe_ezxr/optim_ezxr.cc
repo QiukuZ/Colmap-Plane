@@ -32,20 +32,6 @@ using namespace std;
 void PrintUsage(); 
 JsonConfig GetConfigInfo(std::string config_json_path);
 
-struct JsonConfig {
-    std::string input_model_path;
-    std::string output_model_path;
-    std::string plane_constraint_path;
-    std::string pose_geos_path;
-    std::string tum_result_path;
-    int plane_num;
-    std::vector<double> plane_weight;
-    double pose_weight;
-    bool plane_constraint_enable;
-    bool pose_constraint_enable;
-};
-
-
 int main(int argc, char** argv) {
   InitializeGlog(argv);
   

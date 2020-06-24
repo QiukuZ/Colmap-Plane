@@ -55,6 +55,20 @@ class BundleAdjustmentController : public Thread {
 // Added by ezxr-sx-zhangqunkang
 // Add Start
 
+struct JsonConfig {
+    std::string input_model_path;
+    std::string output_model_path;
+    std::string plane_constraint_path;
+    std::string pose_geos_path;
+    std::string tum_result_path;
+    int plane_num;
+    std::vector<double> plane_weight;
+    double pose_weight;
+    bool plane_constraint_enable;
+    bool pose_constraint_enable;
+    bool save_image_traj_enable;
+};
+
 // Class that controls the global bundle adjustment procedure.
 class BundleAdjustmentController_ezxr : public Thread {
  public:
