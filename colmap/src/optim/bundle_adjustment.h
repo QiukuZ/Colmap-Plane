@@ -226,10 +226,18 @@ class BundleAdjuster_ezxr : public BundleAdjuster{
     void AddPoseToProblem(Reconstruction* reconstruction,
                            ceres::LossFunction* loss_function);
 
+  struct ImagePose {
+    std::string ImageName;
+    Eigen::Vector3d Position;
+  };
+
+
   protected:
     std::vector<Eigen::Vector4d> planes_coeffs_;
     std::vector<double> planes_weight_;
     std::vector<std::vector<point3D_t> > planes_point3D_ids_;
+    double pose_weight_;
+    std::vector<ImagePose> image_pose_geos_;
 };
 // Add End
 
