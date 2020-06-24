@@ -66,6 +66,7 @@ struct JsonConfig {
     double pose_weight;
     bool plane_constraint_enable;
     bool pose_constraint_enable;
+    bool save_image_traj_enable;
 };
 
 // Class that controls the global bundle adjustment procedure.

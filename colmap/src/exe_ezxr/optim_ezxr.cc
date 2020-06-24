@@ -173,9 +173,19 @@ JsonConfig GetConfigInfo(std::string config_json_path){
             config.pose_constraint_enable = false;
     }
 
+    // get save_image_traj_enable 
+    json_info = cJSON_GetObjectItem(json , "save_image_traj_enable");
+    if ( cJSON_IsBool(json_info))
+    {
+        if(json_info->valueint)
+            config.save_image_traj_enable = true;
+        else
+            config.save_image_traj_enable = false;
+    }
     cJSON_Delete(json);
 
     // Print config 
+    std::cout << std::endl << "=============================Config INFO=============================="<< std::endl;
     std::cout << "===> input_model_path : " << config.input_model_path << std::endl;
     std::cout << "===> output_model_path : " << config.output_model_path << std::endl;
     std::cout << "===> plane_constraint_path : " << config.plane_constraint_path << std::endl;
@@ -193,6 +203,8 @@ JsonConfig GetConfigInfo(std::string config_json_path){
     std::cout << "===> pose_weight : " << config.pose_weight << std::endl;
     std::cout << "===> plane_constraint_enable : " << config.plane_constraint_enable << std::endl;
     std::cout << "===> pose_constraint_enable : " << config.pose_constraint_enable << std::endl;
+    std::cout << "===> save_image_traj_enable : " << config.save_image_traj_enable << std::endl;
+    std::cout << std::endl << "======================================================================="<< std::endl;
     return config;
 
 }
