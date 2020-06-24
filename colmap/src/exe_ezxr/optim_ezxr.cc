@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
   // BA controller 来控制 BA问题构建
   BundleAdjustmentController_ezxr ba_controller(options, &reconstruction);
-  ba_controller.AddPlaneConstraint(config.plane_constraint_path);
+  ba_controller.AddPlaneConstraint(config.plane_constraint_path, config.plane_weight);
   ba_controller.AddPoseConstraint(config.pose_geos_path,config.pose_weight);
   ba_controller.SaveImageTraj(config.tum_result_path);
   ba_controller.Start();

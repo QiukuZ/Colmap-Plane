@@ -141,15 +141,24 @@ void BundleAdjustmentController_ezxr::Run() {
   if (plane_constraint_)
   {
     bundle_adjuster.GetPlaneInfoFromTxt(plane_constraint_path_);
+    bundle_adjuster.SetPlaneWeight(plane_weight_);
+  }
+  if (pose_geos_constraint_)
+  {
+    bundle_adjuster.GetPoseInfoFromTxt(pose_geos_path_);
+    bundle_adjuster.SetPoseWeight(pose_weight_);
   }
   bundle_adjuster.Solve_ezxr(reconstruction_);
+  if (save_image_traj_)
+    bundle_adjuster.SaveImageTraj(reconstruction_,tum_path_);
 
   GetTimer().PrintMinutes();
 }
 
-void BundleAdjustmentController_ezxr::AddPlaneConstraint(std::string plane_constraint_path) {
+void BundleAdjustmentController_ezxr::AddPlaneConstraint(std::string plane_constraint_path, const std::vector<double> plane_weight) {
   plane_constraint_path_ = plane_constraint_path;
   plane_constraint_ = true;
+  plane_weight_ = plane_weight;
 }
 
 void BundleAdjustmentController_ezxr::AddPoseConstraint(std::string pose_geos_path, const double weight) { 

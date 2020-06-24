@@ -215,6 +215,7 @@ class BundleAdjuster_ezxr : public BundleAdjuster{
     void PrintPoseInfo();
     void SaveImageTraj(Reconstruction* reconstruction, std::string path);
     void SetPoseWeight(const double weight);
+    void SetPlaneWeight(const std::vector<double> weight);
 
   private:
     void SetUp_ezxr(Reconstruction* reconstruction,

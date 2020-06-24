@@ -499,16 +499,16 @@ bool BundleAdjuster_ezxr::GetPlaneInfoFromTxt(std::string path) {
       {
         infile >> plane_num;
       }
-      if (s == "Weight")
-      {
-        double w;
-        planes_weight_.clear();
-        for (size_t i = 0; i < plane_num; i++)
-        {
-          infile >> w;
-          planes_weight_.push_back(w);
-        }
-      }
+      // if (s == "Weight")
+      // {
+      //   double w;
+      //   planes_weight_.clear();
+      //   for (size_t i = 0; i < plane_num; i++)
+      //   {
+      //     infile >> w;
+      //     planes_weight_.push_back(w);
+      //   }
+      // }
       if (s == "Plane")
       {
         double a,b,c,d;
@@ -563,6 +563,10 @@ bool BundleAdjuster_ezxr::GetPlaneInfoFromTxt(std::string path) {
 void BundleAdjuster_ezxr::SetPoseWeight(const double weight){
     pose_weight_ = weight;
 }
+void BundleAdjuster_ezxr::SetPlaneWeight(const std::vector<double> weight) {
+  planes_weight_ = weight;
+}
+
 
 void BundleAdjuster_ezxr::AddPoseToProblem(Reconstruction* reconstruction,
                                             ceres::LossFunction* loss_function) {
@@ -775,7 +779,14 @@ void BundleAdjuster_ezxr::AddPlaneToProblem(Reconstruction* reconstruction,
                                             ceres::LossFunction* loss_function) {
 
   std::cout << "Add Plane to Problem!" << std::endl;
-
+  std::cout << "===> plane_weight : [";
+  for (size_t i = 0; i < planes_weight_.size(); i++)
+  {
+      if (i < planes_weight_.size()-1)
+          std::cout << planes_weight_[i] << ",";
+      else
+          std::cout << planes_weight_[i] << "]" << std::endl;
+  }
   for (size_t i = 0; i < planes_coeffs_.size(); i++)
   {
     std::vector<point3D_t> point3D_ids = planes_point3D_ids_[i];

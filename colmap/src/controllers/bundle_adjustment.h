@@ -59,7 +59,7 @@ class BundleAdjustmentController_ezxr : public Thread {
  public:
   BundleAdjustmentController_ezxr(const OptionManager& options,
                              Reconstruction* reconstruction);
-  void AddPlaneConstraint(std::string plane_constraint_path);
+  void AddPlaneConstraint(std::string plane_constraint_path, const std::vector<double> plane_weight);
   void AddPoseConstraint(std::string pose_geos_path, const double weight);
   void SaveImageTraj(std::string tum_path);
   
@@ -72,6 +72,7 @@ class BundleAdjustmentController_ezxr : public Thread {
   std::string pose_geos_path_;
   std::string tum_path_;
   double pose_weight_;
+  std::vector<double> plane_weight_;
   bool plane_constraint_;
   bool pose_geos_constraint_;
   bool save_image_traj_;
